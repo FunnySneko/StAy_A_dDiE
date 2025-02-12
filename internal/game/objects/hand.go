@@ -6,16 +6,14 @@ func NewHand(diceCount int) Hand {
 	}
 }
 
-func(hand *Hand) RollDie(index int) {
-	hand.dice[index].Roll()
+func(hand *Hand) Reroll() {
+	for i := range hand.dice {
+		hand.dice[i].Roll()
+	}
 }
 
-func(hand *Hand) GetPoints() int {
-	var points int
-	for _, die := range hand.dice {
-		points += die.value
-	}
-	return points
+func(hand *Hand) RollDie(index int) {
+	hand.dice[index].Roll()
 }
 
 type Hand struct {

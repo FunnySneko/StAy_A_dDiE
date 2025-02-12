@@ -12,8 +12,8 @@ const (
 
 func NewGame(diceCount int) Game {
 	return Game{
-		player: objects.NewPlayer(diceCount),
-		enemy: objects.NewPlayer(diceCount),
+		Player: objects.NewPlayer(diceCount),
+		Enemy: objects.NewPlayer(diceCount),
 		isRunning: true,
 		turn: Player,
 	}
@@ -28,12 +28,12 @@ func(game *Game) GetTurn() string {
 }
 
 func(game *Game) Update() {
-	
+
 }
 
 type Game struct {
-	player objects.Player
-	enemy objects.Player
+	Player objects.Player
+	Enemy objects.Player
 	isRunning bool
 	turn turn
 }

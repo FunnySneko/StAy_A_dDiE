@@ -70,14 +70,15 @@ func StartGame(w fyne.Window, game game.Game, diceCount int) {
 }
 
 func main() {
+	//WINDOW INIT
 	a := app.New()
 	w := a.NewWindow("StAy_A_dDiE")
 	w.Resize(fyne.NewSize(500, 500))
 
 	labelTitle := widget.NewLabel("select dice count")
 
+	//SELECT DICE COUNT
 	var diceCount int
-
 	diceCountRadio := widget.NewRadioGroup([]string{
 		"3 dice",
 		"4 dice",
@@ -96,7 +97,7 @@ func main() {
 	startButton := widget.NewButton("START GAME", func() {
 		if(diceCount != 0) {
 			var game game.Game = game.NewGame(diceCount)
-			StartGame(w, game)
+			StartGame(w, game, diceCount)
 		}
 	})
 
