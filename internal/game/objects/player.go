@@ -6,6 +6,10 @@ func NewPlayer(diceCount int) Player {
 	}
 }
 
+func(player *Player) GetDiceTotalValue() int {
+	return player.totalValue
+}
+
 func(player *Player) GetDiceValues() []int {
 	var values []int
 	for _, die := range player.dice {

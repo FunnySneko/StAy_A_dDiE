@@ -3,7 +3,6 @@ package main
 import (
 	"APP/internal/game"
 	"fmt"
-
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/canvas"
@@ -31,6 +30,14 @@ func StartGame(w fyne.Window, game game.Game, diceCount int) {
 		diceTextures[i] = res
 	}
 
+	// TOTAL VALUE LABELS
+	labelEnemyValue := widget.NewLabel("0")
+	labelEnemyValue.Alignment = fyne.TextAlignCenter
+	labelEnemyValue.TextStyle.Bold = true
+	labelPlayerValue := widget.NewLabel("0")
+	labelPlayerValue.Alignment = fyne.TextAlignCenter
+	labelPlayerValue.TextStyle.Bold = true
+
 	// INIT VALUES
 	game.Enemy.Reroll()
 	game.Player.Reroll()
@@ -44,6 +51,8 @@ func StartGame(w fyne.Window, game game.Game, diceCount int) {
 		enemyValues := game.Enemy.GetDiceValues()
 		playerValues := game.Player.GetDiceValues()
 		labelTurn.SetText(game.GetTurn() + "'S TURN")
+		labelEnemyValue.SetText(fmt.Sprint(game.Enemy.GetDiceTotalValue()))
+		labelPlayerValue.SetText(fmt.Sprint(game.Player.GetDiceTotalValue()))
 
 		fmt.Println("ENEMY DICE VALUES:", enemyValues)
 		fmt.Println("PLAYER DICE VALUES:", playerValues)
@@ -77,12 +86,11 @@ func StartGame(w fyne.Window, game game.Game, diceCount int) {
 
 	enemyRerollButtons := container.NewGridWithColumns(diceCount)
 	for i := 0; i < diceCount; i++ {
-		enemyRerollButton := widget.NewButton("REROLL", func(id int) func() {
-			return func() {
-				game.Enemy.RollDie(id)
-				updateUI()
-			}
-		}(i))
+		enemyRerollButton := widget.NewButton("REROLL", func() {
+			id := i
+			game.Enemy.RollDie(id)
+			updateUI()
+		})
 		enemyRerollButtons.Add(enemyRerollButton)
 	}
 
@@ -91,6 +99,9 @@ func StartGame(w fyne.Window, game game.Game, diceCount int) {
 		layout.NewSpacer(),
 		enemyRerollButtons,
 		enemyHand,
+		layout.NewSpacer(),
+		labelEnemyValue,
+		labelPlayerValue,
 		layout.NewSpacer(),
 		playerHand,
 		playerRerollButton,
