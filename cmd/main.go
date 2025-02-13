@@ -13,6 +13,8 @@ import (
 )
 
 func StartGame(w fyne.Window, game game.Game, diceCount int) {
+	const diceSize = 100
+
 	// TURN TEXT
 	labelTurn := widget.NewLabel("")
 	labelTurn.Alignment = fyne.TextAlignCenter
@@ -52,12 +54,12 @@ func StartGame(w fyne.Window, game game.Game, diceCount int) {
 
 		for i := 0; i < diceCount; i++ {
 			die := canvas.NewImageFromResource(diceTextures[enemyValues[i]])
-			die.SetMinSize(fyne.NewSize(64, 64))
+			die.SetMinSize(fyne.NewSize(diceSize, diceSize))
 			die.FillMode = canvas.ImageFillContain
 			enemyHand.Add(die)
 
 			die = canvas.NewImageFromResource(diceTextures[playerValues[i]])
-			die.SetMinSize(fyne.NewSize(64, 64))
+			die.SetMinSize(fyne.NewSize(diceSize, diceSize))
 			die.FillMode = canvas.ImageFillContain
 			playerHand.Add(die)
 		}
