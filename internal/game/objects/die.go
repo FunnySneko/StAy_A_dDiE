@@ -5,9 +5,13 @@ import (
 )
 
 func (die *Die) Roll() {
-	die.value = rand.Intn(6)
-	die.value++
-}
+	oldValue := die.value
+	for {
+		die.value = rand.Intn(6)
+		die.value++
+		if die.value != oldValue {break }
+	}
+} 
 
 type Die struct {
 	value int

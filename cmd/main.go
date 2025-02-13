@@ -3,11 +3,13 @@ package main
 import (
 	"APP/internal/game"
 	"fmt"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/canvas"
-	"fyne.io/fyne/v2/widget"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/layout"
+	"fyne.io/fyne/v2/widget"
 )
 
 func StartGame(w fyne.Window, game game.Game, diceCount int) {
@@ -27,46 +29,75 @@ func StartGame(w fyne.Window, game game.Game, diceCount int) {
 		diceTextures[i] = res
 	}
 
-	// CREATING CONTAINERS
-	enemyHand := container.NewGridWithColumns(diceCount)
-	playerHand := container.NewGridWithColumns(diceCount)
-	
 	// INIT VALUES
 	game.Enemy.Reroll()
 	game.Player.Reroll()
 
-	// GETTING VALUES
-	enemyValues := game.Enemy.GetDiceValues()
-	playerValues := game.Player.GetDiceValues()
-	labelTurn.SetText(game.GetTurn() + "'S MOVE")
+	// CREATING CONTAINERS
+	enemyHand := container.NewGridWithColumns(diceCount)
+	playerHand := container.NewGridWithColumns(diceCount)
 
-	fmt.Println("ENEMY DICE VALUES:", enemyValues)
-	fmt.Println("PLAYER DICE VALUES:", playerValues)
-	
-	// ADDING DICE TO CONTAINERS
-	for i := 0; i < diceCount; i++ {
-		if enemyValues[i] <= 0 || enemyValues[i] > 6 {
-			fmt.Println("ERROR: INVALID ENEMY DIE VALUE AT INDEX", i)
-		}
-		if playerValues[i] <= 0 || playerValues[i] > 6 {
-			fmt.Println("ERROR: INVALID PLAYER DIE VALUE AT INDEX", i)
-		}
+	updateUI := func() {
+		// GETTING VALUES
+		enemyValues := game.Enemy.GetDiceValues()
+		playerValues := game.Player.GetDiceValues()
+		labelTurn.SetText(game.GetTurn() + "'S TURN")
 
-		die := canvas.NewImageFromResource(diceTextures[enemyValues[i]])
-		if die != nil {
+		fmt.Println("ENEMY DICE VALUES:", enemyValues)
+		fmt.Println("PLAYER DICE VALUES:", playerValues)
+
+		// CLEANING CONTAINERS
+		enemyHand.Objects = nil
+		playerHand.Objects = nil
+
+		for i := 0; i < diceCount; i++ {
+			die := canvas.NewImageFromResource(diceTextures[enemyValues[i]])
 			die.SetMinSize(fyne.NewSize(64, 64))
 			die.FillMode = canvas.ImageFillContain
 			enemyHand.Add(die)
-		}
-		die = canvas.NewImageFromResource(diceTextures[playerValues[i]])
-		if die != nil {
+
+			die = canvas.NewImageFromResource(diceTextures[playerValues[i]])
 			die.SetMinSize(fyne.NewSize(64, 64))
 			die.FillMode = canvas.ImageFillContain
 			playerHand.Add(die)
 		}
+
+		// REFRESHING CONTAINERS
+		enemyHand.Refresh()
+		playerHand.Refresh()
 	}
-	gameContent := container.NewVBox(labelTurn, enemyHand, playerHand)
+
+	// CREATING PLAYER BUTTON
+	playerRerollButton := widget.NewButton("REROLL", func() {
+		game.Player.Reroll()
+		updateUI()
+	})
+
+	enemyRerollButtons := container.NewGridWithColumns(diceCount)
+	for i := 0; i < diceCount; i++ {
+		enemyRerollButton := widget.NewButton("REROLL", func(id int) func() {
+			return func() {
+				game.Enemy.RollDie(id)
+				updateUI()
+			}
+		}(i))
+		enemyRerollButtons.Add(enemyRerollButton)
+	}
+
+	gameContent := container.NewVBox(
+		labelTurn,
+		layout.NewSpacer(),
+		enemyRerollButtons,
+		enemyHand,
+		layout.NewSpacer(),
+		playerHand,
+		playerRerollButton,
+		layout.NewSpacer(),
+	)
+
 	w.SetContent(gameContent)
+
+	updateUI()
 }
 
 func main() {
