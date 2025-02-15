@@ -6,8 +6,8 @@ import (
 
 type turn int
 const (
-	Player turn = iota
-	Enemy
+	EnemyTurn turn = iota
+	PlayerTurn
 )
 
 func NewGame(diceCount int) Game {
@@ -15,20 +15,20 @@ func NewGame(diceCount int) Game {
 		Player: objects.NewPlayer(diceCount),
 		Enemy: objects.NewPlayer(diceCount),
 		isRunning: true,
-		turn: Player,
+		turn: PlayerTurn,
 	}
 }
 
-func(game *Game) GetTurn() string {
-	if game.turn == Player {
-		return "PLAYER"
-	} else {
-		return "ENEMY"
-	}
+func(game *Game) GetTurn() turn {
+	return game.turn
 }
 
 func(game *Game) Update() {
-
+	if(game.turn == EnemyTurn) {
+		game.turn = PlayerTurn
+	} else {
+		game.turn = EnemyTurn
+	}
 }
 
 type Game struct {
