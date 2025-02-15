@@ -6,13 +6,13 @@ func NewPlayer(diceCount int) Player {
 	}
 }
 
-func(player *Player) GetDiceTotalValue() int {
+func (player *Player) GetDiceTotalValue() int {
 	return player.totalValue
 }
 
-func(player *Player) GetDiceValues() []int {
+func (player *Player) GetDiceValues() []int {
 	var values []int
-	for _, die := range player.dice {
+	for _, die := range player.Dice {
 		values = append(values, die.value)
 	}
 	return values
@@ -20,5 +20,6 @@ func(player *Player) GetDiceValues() []int {
 
 type Player struct {
 	Hand
-	Score int
+	Score  int
+	Health int
 }

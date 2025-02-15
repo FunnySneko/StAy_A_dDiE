@@ -9,9 +9,11 @@ func (die *Die) Roll() {
 	for {
 		die.value = rand.Intn(6)
 		die.value++
-		if die.value != oldValue {break }
+		if die.value != oldValue {
+			break
+		}
 	}
-} 
+}
 
 type Die struct {
 	value int
