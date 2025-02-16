@@ -19,10 +19,18 @@ const (
 	Heal
 )
 
+func (game *Game) NextTurn() {
+	if game.Turn == PlayerTurn {
+		game.Turn = EnemyTurn
+	} else {
+		game.Turn = PlayerTurn
+	}
+}
+
 func (game *Game) NextStage() Event {
 	game.Stage++
 	if game.Stage == 1 {
-		game.NewFight(2, 1, 2)
+		game.NewFight(2, 1, 5)
 		return Fight
 	}
 	return Fight
@@ -34,7 +42,8 @@ func (game *Game) NewFight(diceCount, aggressiveness, difficulty int) {
 		game.Enemy.SetDie(i, difficulty+rand.Intn(2))
 	}
 	game.enemyAggressiveness = aggressiveness
-	game.Enemy.Health = 10
+	game.Enemy.Health = 5 * difficulty
+	game.Turn = PlayerTurn
 }
 
 func NewGame() Game {
@@ -48,15 +57,11 @@ func NewGame() Game {
 	return game
 }
 
-func (game *Game) GetTurn() turn {
-	return game.turn
-}
-
 func (game *Game) Update() {
-	if game.turn == EnemyTurn {
-		game.turn = PlayerTurn
+	if game.Turn == EnemyTurn {
+		game.Turn = PlayerTurn
 	} else {
-		game.turn = EnemyTurn
+		game.Turn = EnemyTurn
 	}
 }
 
@@ -64,7 +69,6 @@ type Game struct {
 	Player              objects.Player
 	Enemy               objects.Player
 	enemyAggressiveness int
-	isRunning           bool
-	turn                turn
+	Turn                turn
 	Stage               int
 }

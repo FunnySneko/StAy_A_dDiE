@@ -1,10 +1,13 @@
 package objects
 
 func NewHand(diceCount int) Hand {
-	return Hand{
-		Dice:              make([]Die, diceCount),
-		RollOpportunities: make([]int, diceCount),
+	var hand Hand
+	hand.Dice = make([]Die, diceCount)
+	hand.RollOpportunities = make([]int, diceCount)
+	for i := range hand.Dice {
+		hand.RollOpportunities[i] = 1
 	}
+	return hand
 }
 
 func (hand *Hand) CalculateValue() {

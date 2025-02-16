@@ -20,14 +20,17 @@ func NewHeaderText(text string) fyne.CanvasObject {
 	return labelHeader
 }
 
-func NewEnemyRollButtonsContainer(g game.Game) *fyne.Container {
+func NewEnemyRollButtons(g game.Game, onRoll func(index int)) []*widget.Button {
 	count := len(g.Enemy.GetDiceValues())
-	enemyRollButtonContainer := container.NewGridWithColumns(count)
+	enemyRollButtons := make([]*widget.Button, 0, count) // Сразу задаем емкость
 	for i := 0; i < count; i++ {
-		enemyRollButton := widget.NewButton("ROLL", func() {})
-		enemyRollButtonContainer.Add(enemyRollButton)
+		index := i
+		enemyRollButton := widget.NewButton("ROLL", func() {
+			onRoll(index)
+		})
+		enemyRollButtons = append(enemyRollButtons, enemyRollButton)
 	}
-	return enemyRollButtonContainer
+	return enemyRollButtons
 }
 
 func NewDiceHandContainer(values []int) *fyne.Container {
@@ -58,12 +61,14 @@ func ChangeScreen(w fyne.Window, g game.Game, e game.Event) {
 
 func FightScreen(w fyne.Window, g game.Game) {
 	// HAND CONTAINERS
-	enemyHand := NewDiceHandContainer(g.Enemy.GetDiceValues())
-	playerHand := NewDiceHandContainer(g.Player.GetDiceValues())
+	enemyHand := container.NewGridWithColumns(len(g.Enemy.Dice))
+	playerHand := container.NewGridWithColumns(len(g.Player.Dice))
+
 	// HEALTH
 	enemyHealth := widget.NewLabel(fmt.Sprint("[ ENEMY'S HEALTH: ", g.Enemy.Health, " ]"))
 	playerHealth := widget.NewLabel(fmt.Sprint("[ YOUR HEALTH: ", g.Player.Health, " ]"))
 	playerHealth.Alignment = fyne.TextAlignTrailing
+
 	// VALUES
 	enemyDiceValue := widget.NewLabel(fmt.Sprint(g.Enemy.GetDiceTotalValue()))
 	enemyDiceValue.Alignment = fyne.TextAlignCenter
@@ -71,21 +76,85 @@ func FightScreen(w fyne.Window, g game.Game) {
 	playerDiceValue := widget.NewLabel(fmt.Sprint(g.Player.GetDiceTotalValue()))
 	playerDiceValue.Alignment = fyne.TextAlignCenter
 	playerDiceValue.TextStyle.Bold = true
-	// REROLL BUTTON
-	buttonPlayerReroll := widget.NewButton("REROLL YOUR DICE", func() {})
 
-	content := container.NewVBox(NewStageDisplayer(g),
+	// TURN
+	turn := widget.NewLabel("TURN")
+	turn.Alignment = fyne.TextAlignCenter
+
+	// ENEMY ROLL BUTTONS
+	enemyRollButtons := make([]*widget.Button, len(g.Enemy.Dice))
+
+	// REROLL BUTTON
+	var buttonPlayerReroll *widget.Button
+
+	updateUI := func() {
+		for i := range g.Enemy.Dice {
+			if g.Enemy.RollOpportunities[i] == 0 || g.Turn == game.EnemyTurn {
+				enemyRollButtons[i].Disable()
+			} else {
+				enemyRollButtons[i].Enable()
+			}
+			enemyRollButtons[i].Refresh()
+		}
+		enemyHand.Objects = NewDiceHandContainer(g.Enemy.GetDiceValues()).Objects
+		playerHand.Objects = NewDiceHandContainer(g.Player.GetDiceValues()).Objects
+		enemyDiceValue.SetText(fmt.Sprint(g.Enemy.GetDiceTotalValue()))
+		playerDiceValue.SetText(fmt.Sprint(g.Player.GetDiceTotalValue()))
+		if g.Turn == game.EnemyTurn {
+			turn.SetText("ENEMY'S TURN")
+			buttonPlayerReroll.Disable()
+		} else {
+			turn.SetText("YOUR TURN")
+		}
+		enemyHand.Refresh()
+		playerHand.Refresh()
+		enemyDiceValue.Refresh()
+		playerDiceValue.Refresh()
+		buttonPlayerReroll.Refresh()
+		if g.Turn == game.EnemyTurn {
+			g.NextTurn()
+		}
+	}
+
+	rollEnemyDie := func(index int) {
+		g.Enemy.RollDie(index)
+		g.NextTurn()
+		updateUI()
+	}
+
+	rerollPlayerDice := func() {
+		g.Player.Reroll()
+		g.NextTurn()
+		updateUI()
+	}
+
+	buttonPlayerReroll = widget.NewButton("REROLL YOUR DICE", func() {
+		rerollPlayerDice()
+	})
+
+	enemyRollButtons = NewEnemyRollButtons(g, rollEnemyDie)
+	enemyRollButtonsContainer := container.NewGridWithColumns(len(g.Enemy.Dice))
+	for i := range g.Enemy.Dice {
+		enemyRollButtonsContainer.Add(enemyRollButtons[i])
+	}
+
+	content := container.NewVBox(
+		NewStageDisplayer(g),
 		NewHeaderText("FIGHT"),
 		layout.NewSpacer(),
-		NewEnemyRollButtonsContainer(g),
+		turn,
+		enemyRollButtonsContainer,
 		enemyHand,
 		container.NewGridWithColumns(3, enemyHealth, enemyDiceValue),
 		widget.NewSeparator(),
 		container.NewGridWithColumns(3, layout.NewSpacer(), playerDiceValue, playerHealth),
 		playerHand,
 		buttonPlayerReroll,
-		layout.NewSpacer())
+		layout.NewSpacer(),
+	)
+
 	w.SetContent(content)
+	updateUI()
 }
 
 func StartScreen(w fyne.Window, g game.Game) {
@@ -107,7 +176,7 @@ func StartScreen(w fyne.Window, g game.Game) {
 func main() {
 	a := app.New()
 	w := a.NewWindow("StAy_A_dDiE")
-	w.Resize(fyne.NewSize(530, 650))
+	w.Resize(fyne.NewSize(550, 600))
 	g := game.NewGame()
 	for i := 1; i <= 6; i++ {
 		path := fmt.Sprintf("assets/die%d.png", i)
