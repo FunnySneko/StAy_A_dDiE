@@ -13,7 +13,7 @@ func NewHand(diceCount int) Hand {
 func (hand *Hand) CalculateValue() {
 	hand.totalValue = 0
 	for _, die := range hand.Dice {
-		hand.totalValue += die.value
+		hand.totalValue += die.Value
 	}
 }
 
@@ -34,7 +34,7 @@ func (hand *Hand) RollDie(index int) {
 }
 
 func (hand *Hand) SetDie(index, value int) {
-	hand.Dice[index].value = value
+	hand.Dice[index].Value = value
 	hand.CalculateValue()
 }
 

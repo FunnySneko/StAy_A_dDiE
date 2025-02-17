@@ -2,6 +2,7 @@ package game
 
 import (
 	"APP/internal/game/objects"
+	"math"
 	"math/rand"
 )
 
@@ -19,6 +20,45 @@ const (
 	Heal
 )
 
+func (game *Game) DealDamage() {
+	var victim *objects.Player
+	damage := math.Abs(float64(game.Enemy.GetDiceTotalValue() - game.Player.GetDiceTotalValue()))
+	if game.Enemy.GetDiceTotalValue() > game.Player.GetDiceTotalValue() {
+		victim = &game.Player
+	} else {
+		victim = &game.Enemy
+	}
+	victim.Health -= int(damage)
+}
+
+func (game *Game) EnemyMove() {
+	var playersMaxValueDie int
+	_ = playersMaxValueDie
+	empty := true
+	for i := range game.Player.Dice {
+		if game.Player.RollOpportunities[i] == 1 {
+			if empty {
+				playersMaxValueDie = i
+				empty = false
+			} else {
+				if game.Player.Dice[i].Value > game.Player.Dice[playersMaxValueDie].Value {
+					playersMaxValueDie = i
+				}
+			}
+		}
+	}
+	if game.Enemy.GetDiceTotalValue() > game.Player.GetDiceTotalValue() {
+		if !empty {
+			game.Player.RollDie(playersMaxValueDie)
+		} else {
+			game.Enemy.Reroll()
+		}
+	} else {
+		game.Enemy.Reroll()
+	}
+	game.DealDamage()
+}
+
 func (game *Game) NextTurn() {
 	if game.Turn == PlayerTurn {
 		game.Turn = EnemyTurn
@@ -30,7 +70,7 @@ func (game *Game) NextTurn() {
 func (game *Game) NextStage() Event {
 	game.Stage++
 	if game.Stage == 1 {
-		game.NewFight(2, 1, 5)
+		game.NewFight(4, 1, 2)
 		return Fight
 	}
 	return Fight
@@ -42,7 +82,7 @@ func (game *Game) NewFight(diceCount, aggressiveness, difficulty int) {
 		game.Enemy.SetDie(i, difficulty+rand.Intn(2))
 	}
 	game.enemyAggressiveness = aggressiveness
-	game.Enemy.Health = 5 * difficulty
+	game.Enemy.Health = 3 * difficulty
 	game.Turn = PlayerTurn
 }
 
@@ -52,17 +92,9 @@ func NewGame() Game {
 	for i := range game.Player.Hand.Dice {
 		game.Player.SetDie(i, 4+rand.Intn(3))
 	}
-	game.Player.Health = 25
+	game.Player.Health = 50
 	game.Stage = 0
 	return game
-}
-
-func (game *Game) Update() {
-	if game.Turn == EnemyTurn {
-		game.Turn = PlayerTurn
-	} else {
-		game.Turn = EnemyTurn
-	}
 }
 
 type Game struct {

@@ -13,7 +13,7 @@ func (player *Player) GetDiceTotalValue() int {
 func (player *Player) GetDiceValues() []int {
 	var values []int
 	for _, die := range player.Dice {
-		values = append(values, die.value)
+		values = append(values, die.Value)
 	}
 	return values
 }

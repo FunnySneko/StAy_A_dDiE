@@ -22,7 +22,7 @@ func NewHeaderText(text string) fyne.CanvasObject {
 
 func NewEnemyRollButtons(g game.Game, onRoll func(index int)) []*widget.Button {
 	count := len(g.Enemy.GetDiceValues())
-	enemyRollButtons := make([]*widget.Button, 0, count) // Сразу задаем емкость
+	enemyRollButtons := make([]*widget.Button, 0, count)
 	for i := 0; i < count; i++ {
 		index := i
 		enemyRollButton := widget.NewButton("ROLL", func() {
@@ -64,11 +64,6 @@ func FightScreen(w fyne.Window, g game.Game) {
 	enemyHand := container.NewGridWithColumns(len(g.Enemy.Dice))
 	playerHand := container.NewGridWithColumns(len(g.Player.Dice))
 
-	// HEALTH
-	enemyHealth := widget.NewLabel(fmt.Sprint("[ ENEMY'S HEALTH: ", g.Enemy.Health, " ]"))
-	playerHealth := widget.NewLabel(fmt.Sprint("[ YOUR HEALTH: ", g.Player.Health, " ]"))
-	playerHealth.Alignment = fyne.TextAlignTrailing
-
 	// VALUES
 	enemyDiceValue := widget.NewLabel(fmt.Sprint(g.Enemy.GetDiceTotalValue()))
 	enemyDiceValue.Alignment = fyne.TextAlignCenter
@@ -76,6 +71,11 @@ func FightScreen(w fyne.Window, g game.Game) {
 	playerDiceValue := widget.NewLabel(fmt.Sprint(g.Player.GetDiceTotalValue()))
 	playerDiceValue.Alignment = fyne.TextAlignCenter
 	playerDiceValue.TextStyle.Bold = true
+
+	//HEALTH
+	enemyHealth := widget.NewLabel("")
+	playerHealth := widget.NewLabel("")
+	playerHealth.Alignment = fyne.TextAlignTrailing
 
 	// TURN
 	turn := widget.NewLabel("TURN")
@@ -100,32 +100,38 @@ func FightScreen(w fyne.Window, g game.Game) {
 		playerHand.Objects = NewDiceHandContainer(g.Player.GetDiceValues()).Objects
 		enemyDiceValue.SetText(fmt.Sprint(g.Enemy.GetDiceTotalValue()))
 		playerDiceValue.SetText(fmt.Sprint(g.Player.GetDiceTotalValue()))
+		enemyHealth.SetText(fmt.Sprint("[ ENEMY'S HEALTH: ", g.Enemy.Health, " ]"))
+		playerHealth.SetText(fmt.Sprint("[ YOUR HEALTH: ", g.Player.Health, " ]"))
 		if g.Turn == game.EnemyTurn {
 			turn.SetText("ENEMY'S TURN")
 			buttonPlayerReroll.Disable()
 		} else {
 			turn.SetText("YOUR TURN")
+			buttonPlayerReroll.Enable()
 		}
 		enemyHand.Refresh()
 		playerHand.Refresh()
 		enemyDiceValue.Refresh()
 		playerDiceValue.Refresh()
 		buttonPlayerReroll.Refresh()
-		if g.Turn == game.EnemyTurn {
-			g.NextTurn()
-		}
+	}
+
+	enemyTurn := func() {
+		g.NextTurn()
+		updateUI()
+		g.EnemyMove()
+		g.NextTurn()
+		updateUI()
 	}
 
 	rollEnemyDie := func(index int) {
 		g.Enemy.RollDie(index)
-		g.NextTurn()
-		updateUI()
+		enemyTurn()
 	}
 
 	rerollPlayerDice := func() {
 		g.Player.Reroll()
-		g.NextTurn()
-		updateUI()
+		enemyTurn()
 	}
 
 	buttonPlayerReroll = widget.NewButton("REROLL YOUR DICE", func() {
@@ -153,8 +159,9 @@ func FightScreen(w fyne.Window, g game.Game) {
 		layout.NewSpacer(),
 	)
 
-	w.SetContent(content)
 	updateUI()
+
+	w.SetContent(content)
 }
 
 func StartScreen(w fyne.Window, g game.Game) {
