@@ -7,17 +7,22 @@ import (
 )
 
 type turn int
-
 const (
 	EnemyTurn turn = iota
 	PlayerTurn
 )
 
 type Event int
-
 const (
 	Fight Event = iota
 	Heal
+)
+
+type GameState int
+const (
+	Running GameState = iota
+	Won
+	Lost
 )
 
 func (game *Game) DealDamage() {
@@ -29,6 +34,9 @@ func (game *Game) DealDamage() {
 		victim = &game.Enemy
 	}
 	victim.Health -= int(damage)
+	if game.Enemy.Health <= 0 {
+		game.GameState = Won
+	}
 }
 
 func (game *Game) EnemyMove() {
@@ -70,8 +78,13 @@ func (game *Game) NextTurn() {
 func (game *Game) NextStage() Event {
 	game.Stage++
 	if game.Stage == 1 {
+		game.NewFight(2, 1, 2)
+		return Fight
+	} else if game.Stage == 2 {
 		game.NewFight(4, 1, 2)
 		return Fight
+	} else {
+		game.NewFight(6, 1, 5)
 	}
 	return Fight
 }
@@ -82,8 +95,9 @@ func (game *Game) NewFight(diceCount, aggressiveness, difficulty int) {
 		game.Enemy.SetDie(i, difficulty+rand.Intn(2))
 	}
 	game.enemyAggressiveness = aggressiveness
-	game.Enemy.Health = 3 * difficulty
+	game.Enemy.Health = 5 * difficulty
 	game.Turn = PlayerTurn
+	game.GameState = Running
 }
 
 func NewGame() Game {
@@ -103,4 +117,5 @@ type Game struct {
 	enemyAggressiveness int
 	Turn                turn
 	Stage               int
+	GameState			GameState
 }

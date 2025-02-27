@@ -88,32 +88,48 @@ func FightScreen(w fyne.Window, g game.Game) {
 	var buttonPlayerReroll *widget.Button
 
 	updateUI := func() {
-		for i := range g.Enemy.Dice {
-			if g.Enemy.RollOpportunities[i] == 0 || g.Turn == game.EnemyTurn {
-				enemyRollButtons[i].Disable()
-			} else {
-				enemyRollButtons[i].Enable()
+		if g.GameState == game.Running {
+			for i := range g.Enemy.Dice {
+				if g.Enemy.RollOpportunities[i] == 0 || g.Turn == game.EnemyTurn {
+					enemyRollButtons[i].Disable()
+				} else {
+					enemyRollButtons[i].Enable()
+				}
+				enemyRollButtons[i].Refresh()
 			}
-			enemyRollButtons[i].Refresh()
+			enemyHand.Objects = NewDiceHandContainer(g.Enemy.GetDiceValues()).Objects
+			playerHand.Objects = NewDiceHandContainer(g.Player.GetDiceValues()).Objects
+			enemyDiceValue.SetText(fmt.Sprint(g.Enemy.GetDiceTotalValue()))
+			playerDiceValue.SetText(fmt.Sprint(g.Player.GetDiceTotalValue()))
+			enemyHealth.SetText(fmt.Sprint("[ ENEMY'S HEALTH: ", g.Enemy.Health, " ]"))
+			playerHealth.SetText(fmt.Sprint("[ YOUR HEALTH: ", g.Player.Health, " ]"))
+			if g.Turn == game.EnemyTurn {
+				turn.SetText("ENEMY'S TURN")
+				buttonPlayerReroll.Disable()
+			} else {
+				turn.SetText("YOUR TURN")
+				buttonPlayerReroll.Enable()
+			}
+			enemyHand.Refresh()
+			playerHand.Refresh()
+			enemyDiceValue.Refresh()
+			playerDiceValue.Refresh()
+			buttonPlayerReroll.Refresh()
+		} else if g.GameState == game.Won {
+			labelGameWon := widget.NewLabel("YOU WON THIS FIGHT")
+			labelGameWon.Alignment = fyne.TextAlignCenter
+			gameWonContent := container.NewVBox(
+				NewStageDisplayer(g),
+				NewHeaderText("FIGHT END"),
+				layout.NewSpacer(),
+				labelGameWon,
+				widget.NewButton("NEXT", func() {
+					ChangeScreen(w, g, g.NextStage())
+				}),
+				layout.NewSpacer(),
+			)
+			w.SetContent(gameWonContent)
 		}
-		enemyHand.Objects = NewDiceHandContainer(g.Enemy.GetDiceValues()).Objects
-		playerHand.Objects = NewDiceHandContainer(g.Player.GetDiceValues()).Objects
-		enemyDiceValue.SetText(fmt.Sprint(g.Enemy.GetDiceTotalValue()))
-		playerDiceValue.SetText(fmt.Sprint(g.Player.GetDiceTotalValue()))
-		enemyHealth.SetText(fmt.Sprint("[ ENEMY'S HEALTH: ", g.Enemy.Health, " ]"))
-		playerHealth.SetText(fmt.Sprint("[ YOUR HEALTH: ", g.Player.Health, " ]"))
-		if g.Turn == game.EnemyTurn {
-			turn.SetText("ENEMY'S TURN")
-			buttonPlayerReroll.Disable()
-		} else {
-			turn.SetText("YOUR TURN")
-			buttonPlayerReroll.Enable()
-		}
-		enemyHand.Refresh()
-		playerHand.Refresh()
-		enemyDiceValue.Refresh()
-		playerDiceValue.Refresh()
-		buttonPlayerReroll.Refresh()
 	}
 
 	enemyTurn := func() {
